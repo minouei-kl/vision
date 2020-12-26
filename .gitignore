@@ -24,3 +24,4 @@ gen.yml
 .vscode/
 *.orig
 *-checkpoint.ipynb
+.idea
