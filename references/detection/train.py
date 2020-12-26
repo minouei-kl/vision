@@ -28,7 +28,7 @@ import torchvision
 import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
 
-from coco_utils import get_coco, get_coco_kp
+from coco_utils import get_coco, get_coco_kp, get_publay
 
 from group_by_aspect_ratio import GroupedBatchSampler, create_aspect_ratio_groups
 from engine import train_one_epoch, evaluate
@@ -39,6 +39,7 @@ import transforms as T
 
 def get_dataset(name, image_set, transform, data_path):
     paths = {
+        "publay": (data_path, get_publay, 6),
         "coco": (data_path, get_coco, 91),
         "coco_kp": (data_path, get_coco_kp, 2)
     }
@@ -51,8 +52,8 @@ def get_dataset(name, image_set, transform, data_path):
 def get_transform(train):
     transforms = []
     transforms.append(T.ToTensor())
-    if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
+    # if train:
+    #     transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
 
 
@@ -65,7 +66,7 @@ def main(args):
     # Data loading code
     print("Loading data")
 
-    dataset, num_classes = get_dataset(args.dataset, "train", get_transform(train=True), args.data_path)
+    dataset, num_classes = get_dataset(args.dataset, "val", get_transform(train=True), args.data_path)
     dataset_test, _ = get_dataset(args.dataset, "val", get_transform(train=False), args.data_path)
 
     print("Creating data loaders")
@@ -149,7 +150,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__)
 
-    parser.add_argument('--data-path', default='/datasets01/COCO/022719/', help='dataset')
+    parser.add_argument('--data-path', default='/home/minouei/Downloads/datasets/publaynet/', help='dataset')
     parser.add_argument('--dataset', default='coco', help='dataset')
     parser.add_argument('--model', default='maskrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
@@ -174,7 +175,7 @@ if __name__ == "__main__":
     parser.add_argument('--output-dir', default='.', help='path where to save')
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start_epoch', default=0, type=int, help='start epoch')
-    parser.add_argument('--aspect-ratio-group-factor', default=3, type=int)
+    parser.add_argument('--aspect-ratio-group-factor', default=0, type=int)
     parser.add_argument(
         "--test-only",
         dest="test_only",

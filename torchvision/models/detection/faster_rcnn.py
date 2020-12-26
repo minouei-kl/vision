@@ -14,11 +14,10 @@ from .generalized_rcnn import GeneralizedRCNN
 from .rpn import RPNHead, RegionProposalNetwork
 from .roi_heads import RoIHeads
 from .transform import GeneralizedRCNNTransform
-from .backbone_utils import resnet_fpn_backbone
-
+from .backbone_utils import resnet_fpn_backbone, lambda_resnet_fpn_backbone
 
 __all__ = [
-    "FasterRCNN", "fasterrcnn_resnet50_fpn",
+    "FasterRCNN", "fasterrcnn_resnet50_fpn", "fasterrcnn_lambda_resnet50_fpn"
 ]
 
 
@@ -357,6 +356,26 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
         pretrained_backbone = False
     backbone = resnet_fpn_backbone('resnet50', pretrained_backbone, trainable_layers=trainable_backbone_layers)
     model = FasterRCNN(backbone, num_classes, **kwargs)
+    if pretrained:
+        state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'],
+                                              progress=progress)
+        model.load_state_dict(state_dict)
+    return model
+
+
+def fasterrcnn_lambda_resnet50_fpn(pretrained=False, progress=True,
+                                   num_classes=6, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
+    assert trainable_backbone_layers <= 5 and trainable_backbone_layers >= 0
+    # dont freeze any layers if pretrained model or backbone is not used
+    if not (pretrained or pretrained_backbone):
+        trainable_backbone_layers = 5
+    if pretrained:
+        # no need to download the backbone if pretrained is set
+        pretrained_backbone = False
+    backbone = lambda_resnet_fpn_backbone('lambda_resnet50', pretrained_backbone,
+                                          trainable_layers=trainable_backbone_layers)
+    model = FasterRCNN(backbone, num_classes, min_size=400, max_size=600, image_mean=[237.6180, 237.6106, 237.7065],
+                       image_std=[40.0352, 39.9649, 39.8481], **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'],
                                               progress=progress)
