@@ -66,7 +66,7 @@ def main(args):
     # Data loading code
     print("Loading data")
 
-    dataset, num_classes = get_dataset(args.dataset, "val", get_transform(train=True), args.data_path)
+    dataset, num_classes = get_dataset(args.dataset, "train", get_transform(train=True), args.data_path)
     dataset_test, _ = get_dataset(args.dataset, "val", get_transform(train=False), args.data_path)
 
     print("Creating data loaders")
@@ -150,11 +150,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__)
 
-    parser.add_argument('--data-path', default='/home/minouei/Downloads/datasets/publaynet/', help='dataset')
-    parser.add_argument('--dataset', default='coco', help='dataset')
-    parser.add_argument('--model', default='maskrcnn_resnet50_fpn', help='model')
+    parser.add_argument('--data-path', default='/ds/documents/PubLayNet/publaynet/', help='dataset')
+    parser.add_argument('--dataset', default='publay', help='dataset')
+    parser.add_argument('--model', default='fasterrcnn_lambda_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=2, type=int,
+    parser.add_argument('-b', '--batch-size', default=4, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--epochs', default=26, type=int, metavar='N',
                         help='number of total epochs to run')
