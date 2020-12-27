@@ -97,6 +97,10 @@ def main(args):
     model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes,
                                                               pretrained=args.pretrained)
     model.to(device)
+    if args.distributed:
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+
+    print(model)
 
     model_without_ddp = model
     if args.distributed:
@@ -117,6 +121,16 @@ def main(args):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         args.start_epoch = checkpoint['epoch'] + 1
 
+    # if args.lr_find:
+    #     from torch_lr_finder import LRFinder
+    #
+    #     lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
+    #     lr_finder.range_test(data_loader, end_lr=100, num_iter=100)
+    #     lr_finder.plot() # to inspect the loss-learning rate graph
+    #     lr_finder.reset() # to reset the model and optimizer to their initial state
+    #     return
+
+
     if args.test_only:
         evaluate(model, data_loader_test, device=device)
         return
@@ -126,8 +140,11 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+
         train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
+
         lr_scheduler.step()
+
         if args.output_dir:
             utils.save_on_master({
                 'model': model_without_ddp.state_dict(),
@@ -173,12 +190,18 @@ if __name__ == "__main__":
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--print-freq', default=20, type=int, help='print frequency')
     parser.add_argument('--output-dir', default='.', help='path where to save')
-    parser.add_argument('--resume', default='', help='resume from checkpoint')
+    parser.add_argument('--resume', default='model_3.pth', help='resume from checkpoint')
     parser.add_argument('--start_epoch', default=0, type=int, help='start epoch')
     parser.add_argument('--aspect-ratio-group-factor', default=0, type=int)
     parser.add_argument(
         "--test-only",
         dest="test_only",
+        help="Only test the model",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--lr_find",
+        dest="lr_find",
         help="Only test the model",
         action="store_true",
     )

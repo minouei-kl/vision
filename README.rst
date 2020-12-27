@@ -61,7 +61,7 @@ pip:
     pip install torchvision
 
 From source:
-
+https://github.com/pytorch/vision/issues/2958
 .. code:: bash
 
     python setup.py install
